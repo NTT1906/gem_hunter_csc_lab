@@ -160,31 +160,5 @@ pretty_print_cnf(optimized_cnf, len(grid[0]))
 
 # print(update_grid(grid, {1: True, 6: False}))
 
-from pysat.solvers import Solver
 grid_h = len(grid)
 grid_w = len(grid[0])
-start_time = time.time()
-solver = Solver(bootstrap_with = cnf_clauses)
-if solver.solve():
-	end_time = time.time()
-	# print("Satisfied")
-	model = solver.get_model()
-	print(model)
-	# print("model", model)
-
-	time_taken = (end_time - start_time) * 1000
-	print("Complete board solver by PYSAT!\n")
-	# for i in range(grid_h):
-	# 	for j in range(grid_w):
-	# 		if grid[i][j] == '_':
-	# 			if get_id(i, j, grid_w) <= len(model) and model[get_id(i, j, grid_w) - 1] > 0:
-	# 				grid[i][j] = 'T'
-	# 			elif get_id(i, j, grid_w) <= len(model) and model[get_id(i, j, grid_w) - 1] < 0:
-	# 				grid[i][j] = 'G'
-	# 			else:
-	# 				grid[i][j] = 'G'
-	# 		print(f"{grid[i][j]} ")
-	# 	print("\n")
-	print(f'{time_taken:.4f} ms!\n')
-else:
-	print("PYSAT cannot find solution. Unsatisfied CNF!\n")
