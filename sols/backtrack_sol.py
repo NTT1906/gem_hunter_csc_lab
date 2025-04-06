@@ -26,20 +26,6 @@ class BacktrackSolution(ISolution):
 				if literals[literal]: # if literal is pure (unchanged in all clauses)
 					return literal
 			return 0
-		# def find_unit_clause() -> int:
-		# 	for clause in clauses:
-		# 		unassigned_count = 0
-		# 		unassigned_literal = 0
-		# 		for literal in clause:
-		# 			if abs(literal) not in symbols or unassigned_count == 1:
-		# 				unassigned_literal = 0
-		# 				break
-		# 			unassigned_count += 1
-		# 			unassigned_literal = literal
-		#
-		# 		if unassigned_count == 1:
-		# 			return unassigned_literal
-		# 	return 0
 
 		def find_unit_clause() -> int:
 			for clause in clauses:
