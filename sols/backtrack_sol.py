@@ -4,9 +4,9 @@ class BacktrackSolution(ISolution):
 	grid = []
 	r_counter = 0
 	@staticmethod
-	def dpll(clauses: list[Clause], symbols: list[int], model=None) -> Model | None:
+	def dpll(clauses: list[Clause], symbols: set[int], model=None) -> Model | None:
 		if model is None:
-			model = []
+			model = set()
 
 		def is_clause_true(clause: Clause) -> bool:
 			return any(literal in model for literal in clause)
@@ -24,19 +24,8 @@ class BacktrackSolution(ISolution):
 						literals[literal] = True
 			for literal in literals:
 				if literals[literal]: # if literal is pure (unchanged in all clauses)
-					# print(f"L : {literals}")
 					return literal
 			return 0
-		# def find_unit_clause() -> int:
-		# 	# assigned = set(abs(literal) for literal in model)
-		# 	for clause in clauses:
-		# 		# unassigned = [literal for literal in clause if abs(literal) not in assigned]
-		# 		unassigned = [literal for literal in clause if abs(literal) in symbols]
-		# 		if len(unassigned) == 1:
-		# 			print(f"A2: {model}\nU2: {unassigned}")
-		# 			unit_literal = unassigned[0]
-		# 			return unit_literal
-		# 	return 0
 		def find_unit_clause() -> int:
 			for clause in clauses:
 				unassigned_count = 0
@@ -53,10 +42,20 @@ class BacktrackSolution(ISolution):
 			return 0
 
 		# early termination
-		if all(is_clause_true(clause) for clause in clauses):
+		if all(is_clause_true(clause) for clause in clauses): # faster as they used c++ :D
 			return model
 		if any(is_clause_false(clause) for clause in clauses):
 			return None
+
+		# satisfied = True
+		# for clause in clauses:
+		# 	if is_clause_true(clause):
+		# 		continue
+		# 	satisfied = False
+		# 	if is_clause_false(clause):
+		# 		return None
+		# if satisfied:
+		# 	return model
 
 		# pure symbol heuristic
 		pure_symbol = find_pure_symbol()
