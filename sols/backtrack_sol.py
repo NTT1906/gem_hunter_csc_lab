@@ -26,19 +26,28 @@ class BacktrackSolution(ISolution):
 				if literals[literal]: # if literal is pure (unchanged in all clauses)
 					return literal
 			return 0
+		# def find_unit_clause() -> int:
+		# 	for clause in clauses:
+		# 		unassigned_count = 0
+		# 		unassigned_literal = 0
+		# 		for literal in clause:
+		# 			if abs(literal) not in symbols or unassigned_count == 1:
+		# 				unassigned_literal = 0
+		# 				break
+		# 			unassigned_count += 1
+		# 			unassigned_literal = literal
+		#
+		# 		if unassigned_count == 1:
+		# 			return unassigned_literal
+		# 	return 0
+
 		def find_unit_clause() -> int:
 			for clause in clauses:
-				unassigned_count = 0
-				unassigned_literal = 0
-				for literal in clause:
-					if abs(literal) not in symbols or unassigned_count == 1:
-						unassigned_literal = 0
-						break
-					unassigned_count += 1
-					unassigned_literal = literal
-
-				if unassigned_count == 1:
-					return unassigned_literal
+				if any(literal in model for literal in clause):
+					continue  # Clause is already true
+				unassigned_literals = [literal for literal in clause if abs(literal) in symbols]
+				if len(unassigned_literals) == 1:
+					return unassigned_literals[0]
 			return 0
 
 		# early termination
@@ -46,16 +55,6 @@ class BacktrackSolution(ISolution):
 			return model
 		if any(is_clause_false(clause) for clause in clauses):
 			return None
-
-		# satisfied = True
-		# for clause in clauses:
-		# 	if is_clause_true(clause):
-		# 		continue
-		# 	satisfied = False
-		# 	if is_clause_false(clause):
-		# 		return None
-		# if satisfied:
-		# 	return model
 
 		# pure symbol heuristic
 		pure_symbol = find_pure_symbol()
