@@ -1,66 +1,47 @@
+import sys
 from sols.backtrack_sol import BacktrackSolution
 from sols.pysat_sol import *
 from sols.bruteforce_sol import BruteforceSolution
 from utils import *
 
-grid = read_input("asset/input1.txt")
-
-# # Example grid
-# grid = [[2, 0],
-# 		[0, 0]]
-
-# grid = [[0, 0, 0, 5, 0, 0],
-# 		[4, 0, 0, 0, 0, 0],
-# 		[0, 0, 6, 0, 0, 0],
-# 		[2, 2, 0, 0, 0, 2],
-# 		[0, 3, 4, 5, 4, 2],
-# 		[2, 0, 0, 0, 0, 0]]
+grid = read_input("asset/input_2.txt")
 
 for i in grid:
 	print(i)
 
-# Generate CNF constraints
-cnf_clauses = generate_cnf(grid)
-# print("Generated CNF Clauses:")
-# for clause in sorted(cnf_clauses.clauses):
-# 	print(f"{clause}")
-# print("Pretty Printed CNF Clauses:")
-# pretty_print_cnf(cnf_clauses, len(grid))
+cnf = generate_cnf(grid)
 
-# KB = {
-# 	1: False,  # Cell (0, 0) is a gem
-# 	4: True,   # Cell (1, 0) is a trap
-# 	6: False,  # Cell (1, 1) is a gem
-# 	9: True,   # Cell (2, 1) is a trap
-# }
-
-# optimize CNF using the knowledge base
-# optimized_cnf = optimize_cnf(cnf_clauses, KB)
-# print("Optimized CNF Clauses:")
-# for clause in sorted(optimized_cnf.clauses):
-# 	print(f"{clause}")
-	# print(f"{sorted(clause)}")
-
-# print("Pretty Printed optimized CNF Clauses:")
-# pretty_print_cnf(optimized_cnf, len(grid[0]))
-
-print(cnf_clauses.clauses)
-
+from pprint import pprint
+pprint(cnf.clauses)
+print(f"Clauses: {len(cnf.clauses)}")
 pysat_sol = PysatSolution()
-bf_sol = BruteforceSolution()
-bt_sol = BacktrackSolution()
+bruteforce_sol = BruteforceSolution()
+backtrack_sol = BacktrackSolution()
 
-duration = -time.time()
-print(pysat_sol.solve(grid, cnf_clauses).model)
-duration += time.time()
-print(f"D: {duration * 1000:.3f}ms")
+def test(sol: ISolution, name: str):
+	print(f"Test: {name}")
+	duration = -time.time()
+	result = sol.solve(grid, cnf)
+	if result is None:
+		print("No solution")
+	else:
+		model = result.model
+		rows = len(grid)
+		cols = len(grid[0])
+		for row in range(rows):
+			for col in range(cols):
+				if grid[row][col] == 0:
+					m = row * cols + col + 1
+					if m in model:
+						print("T", end=' ')
+					else:
+						print("G", end=' ')
+				else:
+					print(f"{grid[row][col]}", end=' ')
+			print('')
+	duration += time.time()
+	print(f"D: {duration * 1000:.3f}ms")
 
-duration = -time.time()
-print(bf_sol.solve(grid, cnf_clauses).model)
-duration += time.time()
-print(f"D: {duration * 1000:.3f}ms")
-
-duration = -time.time()
-print(bt_sol.solve(grid, cnf_clauses).model)
-duration += time.time()
-print(f"D: {duration * 1000:.3f}ms")
+test(pysat_sol, "pysat")
+test(backtrack_sol, "backtrack")
+test(bruteforce_sol, "bruteforce")

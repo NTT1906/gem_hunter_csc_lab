@@ -75,14 +75,15 @@ def generate_cnf(grid) -> CNF:
 					for comb in combinations(neighbors, trap_amount + 1):
 						clause = tuple(-(r * cols + c + 1) for r, c in comb)
 						clauses_set.add(clause)
-	return CNF(from_clauses=(list(clauses_set)))
+	# return CNF(from_clauses=(list(clauses_set)))
+	return CNF(from_clauses=(sorted(list(clauses_set))))
 
-def pretty_print_cnf(cnf, row):
+def pretty_print_cnf(cnf, cols):
 	for _ in cnf.clauses:
 		clause_str = []
 		for var in _:
-			r = (abs(var) - 1) // row
-			c = (abs(var) - 1) % row
+			r = (abs(var) - 1) // cols
+			c = (abs(var) - 1) % cols
 
 			# T(i, j) for True (trap) and G(i, j) for False (gem)
 			if var > 0:

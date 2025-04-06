@@ -21,7 +21,7 @@ class BruteforceSolution(ISolution):
 					for r, c in get_neighbors(grid, i, j):
 						if grid[r][c] == 0 and (r, c) not in unknown_cells:
 							unknown_cells.append((r, c))
-		# unknown_cells.sort(key=lambda x: x[0] * rows + x[1])
+		# unknown_cells.sort(key=lambda x: x[0] * cols + x[1])
 
 		def is_valid_model(_model):
 			for row in range(rows):
