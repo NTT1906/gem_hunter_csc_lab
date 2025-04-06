@@ -1,12 +1,8 @@
-from isol import *
 from pysat.solvers import Solver
+from ._isol import *
 
 class PysatSolution(ISolution):
-	def __init__(self):
-		super(PysatSolution, self).__init__()
-
-	def solve(self, grid, cnf: CNF):
-		rows, cols = len(grid), len(grid[0])
+	def solve(self, grid: Grid, cnf: CNF) -> Result | None:
 		solver = Solver(bootstrap_with=cnf)
 		if solver.solve():
 			model = solver.get_model()

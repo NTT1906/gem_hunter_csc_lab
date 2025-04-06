@@ -75,7 +75,7 @@ def run_algorithm_in_thread(algorithm, data, target, timeout=30):
 	If the algorithm exceeds the timeout, it raises TimeoutError.
 	"""
 	with ThreadPoolExecutor() as executor:
-		future = executor.submit(algorithm.solve, data, target)
+		future = executor.submit(algorithm. solve, data, target)
 		try:
 			result = future.result(timeout=timeout)  # This will block until result or timeout
 			return result

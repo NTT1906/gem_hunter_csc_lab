@@ -105,60 +105,8 @@ def optimize_cnf(cnf: CNF, knowledge_base) -> CNF:
 				is_clause_satisfied = True
 				break
 
-		# If the clause is not satisfied, add it to the optimized CNF
+		# if the clause is not satisfied, add it to the optimized CNF
 		if not is_clause_satisfied:
 			_optimized_cnf.append(_clause)
 
 	return _optimized_cnf
-
-# Example grid
-# grid = [[0, 0, 0, 1],
-# 		[1, 2, 0, 0],
-# 		[0, 0, 0, 1]]
-
-# grid = [[2, 0, 0, 1, 0],
-# 		[0, 5, 4, 2, 0],
-# 		[3, 0, 0, 2, 1],
-# 		# [3, 0, 6, 0, 1],
-# 		[2, 0, 0, 2, 1]]
-
-# grid = [[2, 0, 0],
-# 		[0, 2, 0],
-# 		[0, 0, 0]]
-
-grid = [[2, 0],
-		[0, 2]]
-
-for i in grid:
-	print(i)
-
-# Generate CNF constraints
-cnf_clauses = generate_cnf(grid)
-print("Generated CNF Clauses:")
-for clause in sorted(cnf_clauses.clauses):
-	print(f"{clause}")
-
-print("Pretty Printed CNF Clauses:")
-pretty_print_cnf(cnf_clauses, len(grid))
-
-KB = {
-	1: False,  # Cell (0, 0) is a gem
-	4: True,   # Cell (1, 0) is a trap
-	6: False,  # Cell (1, 1) is a gem
-	9: True,   # Cell (2, 1) is a trap
-}
-
-# optimize CNF using the knowledge base
-optimized_cnf = optimize_cnf(cnf_clauses, KB)
-print("Optimized CNF Clauses:")
-for clause in sorted(optimized_cnf.clauses):
-	# print(f"{clause}")
-	print(f"{sorted(clause)}")
-
-print("Pretty Printed optimized CNF Clauses:")
-pretty_print_cnf(optimized_cnf, len(grid[0]))
-
-# print(update_grid(grid, {1: True, 6: False}))
-
-grid_h = len(grid)
-grid_w = len(grid[0])
