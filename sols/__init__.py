@@ -1,1 +1,1 @@
-from ._isol import *
+from .isol import *

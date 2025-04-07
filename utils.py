@@ -1,6 +1,6 @@
-import time
 from itertools import combinations
 from pysat.formula import CNF
+from pathlib import Path
 
 def read_input(file_path):
 	"""
@@ -17,17 +17,20 @@ def read_input(file_path):
 			_grid.append(processed)
 	return _grid
 
+def get_output_name_from_input_file(input_path):
+	input_path = Path(input_path)
+	return input_path.with_name('output_' + input_path.stem[6:] + input_path.suffix)
+
 def write_output(file_path, grid):
 	"""
 	Writes the grid to output file.
 	"""
-	with open(file_path, 'w') as f:
-		for row in grid:
-			f.write(', '.join(row) + '\n')
+	pass
 
-def update_grid(grid, model):
+def update_grid(grid: list[list[int]], model: set[int]):
 	"""
 	Updates the grid according to the given model.
+	:param grid:
 	:param model: a dict mapping cell with its value (True = Trap, False = Gem)
 	"""
 	if model is not None:
@@ -69,14 +72,13 @@ def generate_cnf(grid) -> CNF:
 				for comb in combinations(neighbors, neighbors_count - trap_amount + 1):
 					clauses_set.add(tuple((r * cols + c + 1) for r, c in comb))
 
-				# At most 'trap_amount' traps
-				# For each combination of (trap_amount + 1) neighbors, at least one must NOT be a trap
-				if trap_amount < neighbors_count:  # Only if we need some non-traps
+				# at most 'trap_amount' traps
+				# for each combination of (trap_amount + 1) neighbors, at least one must NOT be a trap
+				if trap_amount < neighbors_count:  # only if we need some non-traps
 					for comb in combinations(neighbors, trap_amount + 1):
-						clause = tuple(-(r * cols + c + 1) for r, c in comb)
-						clauses_set.add(clause)
-	# return CNF(from_clauses=(list(clauses_set)))
-	return CNF(from_clauses=(sorted(list(clauses_set))))
+						clauses_set.add(tuple(-(r * cols + c + 1) for r, c in comb))
+	return CNF(from_clauses=(list(clauses_set)))
+	# return CNF(from_clauses=(sorted(list(clauses_set))))
 
 def pretty_print_cnf(cnf, cols):
 	for _ in cnf.clauses:
@@ -93,7 +95,7 @@ def pretty_print_cnf(cnf, cols):
 
 		print(" ∨ ".join(clause_str))
 
-def optimize_cnf(cnf: CNF, knowledge_base) -> CNF:
+def optimize_cnf(cnf: CNF, knowledge_base: set[int]) -> CNF:
 	_optimized_cnf = CNF()
 
 	for _clause in cnf.clauses:
@@ -101,8 +103,7 @@ def optimize_cnf(cnf: CNF, knowledge_base) -> CNF:
 
 		# check if the clause is satisfied by any literal in the knowledge base
 		for var in _clause:
-			# if var is in knowledge base, and its truth value matches the clause's literal, it satisfies the clause
-			if (var > 0 and knowledge_base.get(var, None) is True) or (var < 0 and knowledge_base.get(abs(var), None) is False):
+			if var in knowledge_base or -var in knowledge_base:
 				is_clause_satisfied = True
 				break
 

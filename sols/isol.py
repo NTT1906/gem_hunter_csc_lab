@@ -1,3 +1,4 @@
+import time
 from pysat.formula import CNF
 
 Grid = list[list[int]]
@@ -6,8 +7,10 @@ Clause = list[int]
 
 class Result:
 	model: Model | None
-	def __init__(self, model: Model = None):
+	elapsed_time: float
+	def __init__(self, model: Model = None, elapsed_time: float = 0.0):
 		self.model = model if not None else [] # fail-safe
+		self.elapsed_time = elapsed_time
 
 class ISolution:
 	def solve(self, grid: Grid, cnf: CNF) -> Result | None:

@@ -1,113 +1,134 @@
+import asyncio
+import os
 import time
-import random
-from concurrent.futures import ThreadPoolExecutor, TimeoutError
 
+from sols.backtrack_sol import BacktrackSolution
+from sols.bruteforce_sol import BruteforceSolution
+from sols.isol import ISolution, Result
+from sols.pysat_sol import PysatSolution
+from utils import read_input, generate_cnf, get_neighbors, get_output_name_from_input_file
 
-# Base class for Solution
-class Solution:
-	"""
-	Base class that defines the interface for solving the problem.
-	"""
+async def process_input(input_file: str, timeout: float = 2):
+	try:
+		print(f"Starting {input_file}")
+		grid = read_input(input_file)
+		cnf = generate_cnf(grid)
+	except Exception as e:
+		print(f"Failed to process {input_file}: {e}")
+		return input_file, {"Pysat": ("ERROR", 0), "Backtrack": ("ERROR", 0), "Brute-force": ("ERROR", 0)}
 
-	def solve(self, data, target):
-		raise NotImplementedError("Must be implemented in subclasses.")
+	print("CNF Clauses:")
+	for clause in cnf.clauses[:5]:  # Print first 5 clauses for brevity
+		print(clause)
+	print(f"Total Clauses: {len(cnf.clauses)}")
 
+	scoped_cells = set()
+	rows = len(grid)
+	cols = len(grid[0])
+	for row in range(rows):
+		for col in range(cols):
+			if grid[row][col] != 0:
+				for r, c in get_neighbors(grid, row, col):
+					if 0 <= r < rows and 0 <= c < cols and 0 == grid[r][c]:
+						scoped_cells.add((r, c))
 
-class BacktrackSolution(Solution):
-	"""
-	Backtracking algorithm class that inherits from Solution.
-	This will override the solve method with a backtracking algorithm.
-	"""
-
-	def solve(self, data, target):
-		# Backtracking to find a subset sum equal to the target
-		return self._backtrack(data, target)
-
-	def _backtrack(self, data, target, current_index=0, current_sum=0):
-		# Base case: if we've reached the target sum
-		if current_sum == target:
-			return True
-		# Base case: if we've exhausted all items
-		if current_index >= len(data):
-			return False
-
-		# Include current element
-		if self._backtrack(data, target, current_index + 1, current_sum + data[current_index]):
-			return True
-		# Exclude current element
-		return self._backtrack(data, target, current_index + 1, current_sum)
-
-
-class BruteForceSolution(Solution):
-	"""
-	Brute-force algorithm class that inherits from Solution.
-	This will override the solve method with a brute force approach.
-	"""
-
-	def solve(self, data, target):
-		# Brute force to find a subset sum equal to the target
-		total_sum = 0
-		for number in data:
-			total_sum += number
-		return total_sum == target
-
-
-class PySATSolution(Solution):
-	"""
-	PySAT algorithm class that inherits from Solution.
-	This will use a SAT solver approach (can be simulated here for demonstration).
-	"""
-
-	def solve(self, data, target):
-		# Using PySAT (or any SAT solver) logic (simulated for this example)
-		# Just a placeholder for demonstration purposes
-		# PySAT solution would involve encoding the problem as a SAT problem and solving it
-		return self._pysat_solution(data, target)
-
-	def _pysat_solution(self, data, target):
-		# Simulate a SAT solver check (very simple check here)
-		return sum(data) == target
-
-
-def run_algorithm_in_thread(algorithm, data, target, timeout=30):
-	"""
-	Runs the algorithm in a separate thread and measures execution time.
-	If the algorithm exceeds the timeout, it raises TimeoutError.
-	"""
-	with ThreadPoolExecutor() as executor:
-		future = executor.submit(algorithm. solve, data, target)
-		try:
-			result = future.result(timeout=timeout)  # This will block until result or timeout
-			return result
-		except TimeoutError:
-			return "TIME_OUT"
-
-
-async def benchmark():
-	# Generating random data for testing
-	data = [random.randint(1, 100) for _ in range(50)]  # A smaller dataset for demo
-	target = random.randint(200, 500)  # Random target sum for backtracking
-
-	# Create instances of different solution types
-	backtrack_solution = BacktrackSolution()
-	brute_force_solution = BruteForceSolution()
-	pysat_solution = PySATSolution()
-
-	solutions = [
-		("Backtracking", backtrack_solution),
-		("Brute Force", brute_force_solution),
-		("PySAT", pysat_solution)
+	solutions: list[tuple[str: ISolution]] = [
+		("Pysat", PysatSolution()),
+		("Backtrack", BacktrackSolution()),
+		("Brute-force", BruteforceSolution())
 	]
 
-	# Run all algorithms in separate threads and measure time
+	solution_results = {}
 	for name, solution in solutions:
-		start_time = time.time()
-		result = run_algorithm_in_thread(solution, data, target, timeout=30)
-		end_time = time.time()
-		elapsed_time = end_time - start_time
+		print(f"\nSolution: {name} - {input_file}")
+		local_start_time = time.time()
+		try:
+			result = await asyncio.wait_for(asyncio.to_thread(solution.solve, grid, cnf), timeout=timeout)
+			real_elapsed_time = (time.time() - local_start_time) * 1000
+			print("REAL Time: ", real_elapsed_time)
+			solution_results[name] = result
+			if result is None:
+				print("NO SOLUTION")
+			else:
+				elapsed_time = result.elapsed_time
+				model = result.model
+				output_grid = [row[:] for row in grid]
+				for r in range(rows):
+					for c in range(cols):
+						if grid[r][c] == 0 and (r, c) in scoped_cells:
+							var_index = r * cols + c + 1
+							if var_index in model:
+								output_grid[r][c] = 'T'
+							else:
+								output_grid[r][c] = 'G'
+						elif grid[r][c] == 0 and (r, c) not in scoped_cells:
+							output_grid[r][c] = '_'
 
-		print(f"{name} Result: {result}, Time taken: {elapsed_time:.4f} seconds")
+				for row in output_grid:
+					print(' '.join(map(str, row)))
+				print(f"Time: {elapsed_time:.3f}ms")
+		except asyncio.TimeoutError:
+			print("TIMEOUT")
+			solution_results[name] = Result(elapsed_time=-1.0)
 
+	output_file = get_output_name_from_input_file(input_file)
+	with open(output_file, 'w') as file:
+		print(f"Solution being saved to {output_file}")
+		result = solution_results["Pysat"]
+		model = set(result.model) if result is not None and result.elapsed_time != -1 else set()
+		output_grid = [row[:] for row in grid]
+		for r in range(rows):
+			for c in range(cols):
+				if grid[r][c] == 0 and (r, c) in scoped_cells:
+					var_index = r * cols + c + 1
+					if var_index in model:
+						output_grid[r][c] = 'T'
+					else:
+						output_grid[r][c] = 'G'
+				elif grid[r][c] == 0 and (r, c) not in scoped_cells:
+					output_grid[r][c] = '_'
+
+		for row in output_grid:
+			file.write(', '.join(map(str, row)) + '\n')
+		# file.write("Input: " + input_file + '\n')
+		# file.write("")
+	return solution_results
+
+async def benchmark():
+	input_files = [
+		"asset/input_2.txt",
+		"asset/input_5.txt",
+		"asset/input_4.txt",
+		"asset/input_3.txt",
+		"asset/input_1.txt",
+		"asset/input_6.txt"
+	]
+	input_timeout = [
+		2,
+		2,
+		2,
+		5,
+		15,
+		60,
+	]
+	all_results = {}
+	for i in range(len(input_files)):
+		input_file = input_files[i]
+		all_results[input_file] = await process_input(input_file, input_timeout[i])
+		print(f"\n{'='*30} Finished {input_file} {'='*30}\n")
+
+	print("\n\nBenchmark Summary:")
+	for file, sol_results in all_results.items():
+		print(f"\n--- {file} ---")
+		for sol_name, result in sol_results.items():
+			print(f"{sol_name}: ", end='')
+			if result is None:
+				print("NO SOLUTION")
+			else:
+				if result.elapsed_time == -1.0:
+					print("TIME OUT")
+				else:
+					print(f"SOLVED - {result.elapsed_time:.4f}ms")
 
 if __name__ == "__main__":
-	benchmark()
+	asyncio.run(benchmark())

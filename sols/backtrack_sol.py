@@ -1,10 +1,8 @@
-from ._isol import *
+from .isol import *
 
 class BacktrackSolution(ISolution):
-	grid = []
-	r_counter = 0
 	@staticmethod
-	def dpll(clauses: list[Clause], symbols: set[int], model=None) -> Model | None:
+	def dpll(clauses: list[Clause], symbols: list[int], model: set[int]) -> set[int] | None:
 		if model is None:
 			model = set()
 
@@ -16,22 +14,23 @@ class BacktrackSolution(ISolution):
 			literals = {}
 			for clause in clauses:
 				for literal in clause:
-					if abs(literal) not in symbols:
+					if literal in model or -literal in model:
+					# if abs(literal) not in symbols:
 						continue
 					if -literal in literals:
 						literals[-literal] = False
 					elif literal not in literals:
 						literals[literal] = True
 			for literal in literals:
-				if literals[literal]: # if literal is pure (unchanged in all clauses)
+				if literals[literal]:
 					return literal
 			return 0
-
 		def find_unit_clause() -> int:
 			for clause in clauses:
 				if any(literal in model for literal in clause):
 					continue  # Clause is already true
-				unassigned_literals = [literal for literal in clause if abs(literal) in symbols]
+				# unassigned_literals = [literal for literal in clause if abs(literal) in symbols]
+				unassigned_literals = [literal for literal in clause if literal not in model and not -literal in model]
 				if len(unassigned_literals) == 1:
 					return unassigned_literals[0]
 			return 0
@@ -45,25 +44,22 @@ class BacktrackSolution(ISolution):
 		# pure symbol heuristic
 		pure_symbol = find_pure_symbol()
 		if pure_symbol != 0:
-			new_symbol = symbols.copy()
-			new_symbol.remove(abs(pure_symbol))
-			return BacktrackSolution.dpll(clauses, new_symbol, model + [pure_symbol])
+			new_symbols = [s for s in symbols if s != abs(pure_symbol)]
+			return BacktrackSolution.dpll(clauses, new_symbols, model | {pure_symbol})
 
 		# unit clause heuristic
 		unit_clause = find_unit_clause()
 		if unit_clause != 0:
-			new_symbol = symbols.copy()
-			new_symbol.remove(abs(unit_clause))
-			return BacktrackSolution.dpll(clauses, new_symbol, model + [unit_clause])
+			new_symbols = [s for s in symbols if s != abs(unit_clause)]
+			return BacktrackSolution.dpll(clauses, new_symbols, model | {unit_clause})
 		new_symbol = symbols[1:]
-		return BacktrackSolution.dpll(clauses, new_symbol, model + [symbols[0]]) or BacktrackSolution.dpll(clauses, new_symbol, model + [-symbols[0]])
+		return BacktrackSolution.dpll(clauses, new_symbol, model | {symbols[0]}) or BacktrackSolution.dpll(clauses, new_symbol, model | {-symbols[0]})
 
 	def solve(self, grid: Grid, cnf: CNF) -> Result | None:
+		elapsed_time = -time.time()
 		try:
-			BacktrackSolution.grid = grid
-			# model = self.dpll(cnf.clauses, list(range(1, len(grid) * len(grid[0]) + 1)))
-
-			model = []
+			# model = self.dpll(cnf.clauses, list(range(1, len(grid) * len(grid[0]) + 1)), set())
+			model: set[int] = set()
 			symbols = list(range(1, len(grid) * len(grid[0]) + 1))
 			rows = len(grid)
 			cols = len(grid[0])
@@ -71,11 +67,12 @@ class BacktrackSolution(ISolution):
 				for col in range(cols):
 					if grid[row][col] != 0:
 						m = row * cols + col + 1
-						model.append(-m)
+						model.add(-m)
 						symbols.remove(m)
 
 			model = self.dpll(cnf.clauses, symbols, model)
-			return Result(model) if model else None
+			elapsed_time += time.time()
+			return Result(list(model), elapsed_time * 1000) if model else None
 		except RecursionError:
-			print("Cringe")
+			print("Recursion limit reached in BacktrackSolution.solve")
 			return None
