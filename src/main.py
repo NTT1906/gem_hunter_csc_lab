@@ -1,6 +1,6 @@
 import os
-from sols.backtrack_sol import BacktrackSolution
-from sols.bruteforce_sol import BruteforceSolution
+from sols.backtrack_sol import BacktrackSolver
+from sols.bruteforce_sol import BruteforceSolver
 from sols.pysat_sol import *
 from utils import *
 
@@ -10,35 +10,40 @@ def get_file_absolute_path(file_path):
 
 def run(file_name):
 	grid = read_input(file_name)
+	rows = len(grid)
+	cols = len(grid[0])
 
 	for i in grid:
 		print(i)
 
 	cnf = generate_cnf(grid)
-
 	print(cnf.clauses)
-	print(f"[!] Clauses: {len(cnf.clauses)}")
+	clause_size = len(cnf.clauses)
+	empty_cells = sum(grid[row][col] == 0 for row in range(rows)for col in range(cols))
+	print(f"[!] Clauses: {clause_size}")
+	print(f"[!] Empty cells: {empty_cells}")
 
 	scoped_cells = []
 
-	for row in range(len(grid)):
-		for col in range(len(grid[0])):
+	for row in range(rows):
+		for col in range(cols):
 			if grid[row][col] != 0:
 				for r, c in get_neighbors(grid, row, col):
 					if grid[r][c] == 0 and (r, c) not in scoped_cells:
 						scoped_cells.append((r, c))
 
-	def test(solution: ISolution, solution_name: str):
-		print(f"[+] Solution: {solution_name}")
+	def test(solution: ISolver, solution_name: str):
+		print(f"[+] Solver: {solution_name}")
+		if isinstance(solution, BruteforceSolver) and rows > 5:
+			print("TOO LONG")
+			return
 		elapsed_time = -time.time()
 		result = solution.solve(grid, cnf)
 		if result is None:
 			print("No solution")
 		else:
 			model = result.model
-			rows = len(grid)
-			cols = len(grid[0])
-			output_grid = [row[:] for row in grid]
+			output_grid = [row_sec[:] for row_sec in grid]
 			for trow in range(rows):
 				for tcol in range(cols):
 					if grid[trow][tcol] == 0 and (trow, tcol) in scoped_cells:
@@ -52,7 +57,7 @@ def run(file_name):
 
 			for trow in output_grid:
 				print(' '.join(map(str, trow)))
-			print(f"Elapsed time: {result.elapsed_time:.4f}ms")
+			print(f"Algorithm elapsed time: {result.elapsed_time:.4f}ms")
 			if solution_name == "Pysat":
 				output_file = get_output_name_from_input_file(file_name)
 				with open(output_file, 'w') as file:
@@ -60,12 +65,12 @@ def run(file_name):
 					for trow in output_grid:
 						file.write(', '.join(map(str, trow)) + '\n')
 		elapsed_time += time.time()
-		print(f"Run time: {elapsed_time * 1000:.4f}ms")
+		print(f"Total running time: {elapsed_time * 1000:.4f}ms")
 
 	solutions = {
-		"Pysat": PysatSolution(),
-		"Backtrack": BacktrackSolution(),
-		"Bruteforce": BruteforceSolution()
+		"Pysat": PysatSolver(),
+		"Backtrack": BacktrackSolver(),
+		"Bruteforce": BruteforceSolver()
 	}
 
 	for name, sol in solutions.items():
@@ -73,11 +78,10 @@ def run(file_name):
 
 def main():
 	input_files = [
-		# "../asset/input_5.txt",
-		# "./asset/input_4.txt",
-		# "../asset/input_2.txt",
-		# "../asset/input_1.txt",
-		"../asset2/input_4.txt",
+		"../asset/input_4.txt",
+		"../asset/input_3.txt",
+		"../asset/input_2.txt",
+		"../asset/input_1.txt",
 	]
 	for file in input_files:
 		run(file)

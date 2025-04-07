@@ -1,7 +1,7 @@
 from pysat.solvers import Solver
 from .isol import *
 
-class PysatSolution(ISolution):
+class PysatSolver(ISolver):
 	def solve(self, grid: Grid, cnf: CNF) -> Result | None:
 		elapsed_time = -time.time()
 		solver = Solver(bootstrap_with=cnf)

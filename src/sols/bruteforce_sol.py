@@ -6,13 +6,14 @@ from itertools import combinations
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from src.utils import get_neighbors
 
-class BruteforceSolution(ISolution):
+class BruteforceSolver(ISolver):
     def solve(self, grid: Grid, cnf: CNF) -> Result | None:
         elapsed_time = -time.time()
         rows, cols = len(grid), len(grid[0])
         unknown_cells = set()
 
         # cached neighbors as bruteforce might call to get_neighbors quite a lot!
+        # neighbors_cache = {(i, j): get_neighbors(grid, i, j) for i in range(rows) for j in range(cols) if grid[i][j] == 0}
         neighbors_cache = {(i, j): get_neighbors(grid, i, j) for i in range(rows) for j in range(cols)}
 
         for i in range(rows):
@@ -26,7 +27,7 @@ class BruteforceSolution(ISolution):
                         if grid[r][c] == 0:
                             unknown_cells.add((r, c))
 
-        def is_model_sanctified(_model):
+        def is_model_satisfied(_model):
             trap_set = set(_model)
             for row in range(rows):
                 for col in range(cols):
@@ -39,7 +40,7 @@ class BruteforceSolution(ISolution):
 
         for trap_count in range(len(unknown_cells), -1, -1):
             for traps in combinations(unknown_cells, trap_count):
-                if is_model_sanctified(traps):
+                if is_model_satisfied(traps):
                     elapsed_time += time.time()
                     return Result([r * cols + c + 1 for r, c in traps], elapsed_time * 1000)
                     # model = []

@@ -1,4 +1,3 @@
-# LAB: Gem Hunter
 Video: https://youtu.be/AncauD1iEo0
 
 Video (Backup): https://youtu.be/AncauD1iEo0

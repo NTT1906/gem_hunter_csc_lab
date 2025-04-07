@@ -12,6 +12,6 @@ class Result:
 		self.model = model if not None else [] # fail-safe
 		self.elapsed_time = elapsed_time
 
-class ISolution:
+class ISolver:
 	def solve(self, grid: Grid, cnf: CNF) -> Result | None:
 		raise NotImplementedError("Must be implemented in subclasses.")

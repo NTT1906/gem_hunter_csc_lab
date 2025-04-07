@@ -1,6 +1,6 @@
 from .isol import *
 
-class BacktrackSolution(ISolution):
+class BacktrackSolver(ISolver):
 	@staticmethod
 	def dpll(clauses: list[Clause], symbols: list[int], model: set[int]) -> set[int] | None:
 		if model is None:
@@ -28,7 +28,7 @@ class BacktrackSolution(ISolution):
 		def find_unit_clause() -> int:
 			for clause in clauses:
 				if any(literal in model for literal in clause):
-					continue  # Clause is already true
+					continue  # clause is already assigned
 				# unassigned_literals = [literal for literal in clause if abs(literal) in symbols]
 				unassigned_literals = [literal for literal in clause if literal not in model and not -literal in model]
 				if len(unassigned_literals) == 1:
@@ -45,15 +45,15 @@ class BacktrackSolution(ISolution):
 		pure_symbol = find_pure_symbol()
 		if pure_symbol != 0:
 			new_symbols = [s for s in symbols if s != abs(pure_symbol)]
-			return BacktrackSolution.dpll(clauses, new_symbols, model | {pure_symbol})
+			return BacktrackSolver.dpll(clauses, new_symbols, model | {pure_symbol})
 
 		# unit clause heuristic
 		unit_clause = find_unit_clause()
 		if unit_clause != 0:
 			new_symbols = [s for s in symbols if s != abs(unit_clause)]
-			return BacktrackSolution.dpll(clauses, new_symbols, model | {unit_clause})
+			return BacktrackSolver.dpll(clauses, new_symbols, model | {unit_clause})
 		new_symbol = symbols[1:]
-		return BacktrackSolution.dpll(clauses, new_symbol, model | {symbols[0]}) or BacktrackSolution.dpll(clauses, new_symbol, model | {-symbols[0]})
+		return BacktrackSolver.dpll(clauses, new_symbol, model | {symbols[0]}) or BacktrackSolver.dpll(clauses, new_symbol, model | {-symbols[0]})
 
 	def solve(self, grid: Grid, cnf: CNF) -> Result | None:
 		elapsed_time = -time.time()
@@ -74,5 +74,5 @@ class BacktrackSolution(ISolution):
 			elapsed_time += time.time()
 			return Result(list(model), elapsed_time * 1000) if model else None
 		except RecursionError:
-			print("Recursion limit reached in BacktrackSolution.solve")
+			print("Recursion limit reached in BacktrackSolver.solve")
 			return None

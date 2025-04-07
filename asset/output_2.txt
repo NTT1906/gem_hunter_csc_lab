@@ -1,0 +1,7 @@
+T, G, 1, G, 2, G, G
+2, G, G, T, T, 2, G
+G, T, 4, T, T, G, G
+1, G, G, T, G, G, _
+G, G, 1, G, 1, G, _
+1, G, G, G, G, G, T
+G, T, 2, T, G, 1, G

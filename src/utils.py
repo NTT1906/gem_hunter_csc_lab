@@ -21,26 +21,6 @@ def get_output_name_from_input_file(input_path):
 	input_path = Path(input_path)
 	return input_path.with_name('output_' + input_path.stem[6:] + input_path.suffix)
 
-def write_output(file_path, grid):
-	"""
-	Writes the grid to output file.
-	"""
-	pass
-
-def update_grid(grid: list[list[int]], model: set[int]):
-	"""
-	Updates the grid according to the given model.
-	:param grid:
-	:param model: a dict mapping cell with its value (True = Trap, False = Gem)
-	"""
-	if model is not None:
-		rows = len(grid)
-		for mapping, value in enumerate(model):
-			row = (mapping - 1) // rows
-			col = (mapping - 1) % rows
-			grid[row][col] = 'T' if value else 'G'
-	return grid
-
 def get_neighbors(grid, i, j):
 	"""
 	Get all neighbors of cell at (i, j). Excluding cell outside of grid and number cells.
@@ -54,7 +34,7 @@ def get_neighbors(grid, i, j):
 
 def generate_cnf(grid) -> CNF:
 	"""
-	Convert grid to CNF.
+	Convert grid to CNF, removing duplicate clauses regardless of order.
 	"""
 	clauses_set = set()
 	rows, cols = len(grid), len(grid[0])
@@ -69,46 +49,33 @@ def generate_cnf(grid) -> CNF:
 				if neighbors_count == 0:
 					continue
 
+				# at least trap_amount of traps -> at most 'neighbors_count - trap_amount' non-trap
+				# -> at least 'neighbors_count - trap_amount + 1' non-traps
 				for comb in combinations(neighbors, neighbors_count - trap_amount + 1):
-					clauses_set.add(tuple((r * cols + c + 1) for r, c in comb))
+					clause = tuple(sorted((r * cols + c + 1) for r, c in comb))
+					clauses_set.add(clause)
 
-				# at most 'trap_amount' traps
+				# at most 'trap_amount' traps -> not (at least 'trap_amount + 1' traps)
 				# for each combination of (trap_amount + 1) neighbors, at least one must NOT be a trap
-				if trap_amount < neighbors_count:  # only if we need some non-traps
+				if trap_amount < neighbors_count:
 					for comb in combinations(neighbors, trap_amount + 1):
-						clauses_set.add(tuple(-(r * cols + c + 1) for r, c in comb))
-	return CNF(from_clauses=(list(clauses_set)))
+						clause = tuple(sorted(-(r * cols + c + 1) for r, c in comb))
+						clauses_set.add(clause)
+
+	return CNF(from_clauses=list(clauses_set))
 	# return CNF(from_clauses=(sorted(list(clauses_set))))
 
-def pretty_print_cnf(cnf, cols):
-	for _ in cnf.clauses:
-		clause_str = []
-		for var in _:
-			r = (abs(var) - 1) // cols
-			c = (abs(var) - 1) % cols
-
-			# T(i, j) for True (trap) and G(i, j) for False (gem)
-			if var > 0:
-				clause_str.append(f"T({r},{c})")  # True means the cell is a trap
-			else:
-				clause_str.append(f"G({r},{c})")  # False means the cell is not a trap (i.e., gem)
-
-		print(" ∨ ".join(clause_str))
-
-def optimize_cnf(cnf: CNF, knowledge_base: set[int]) -> CNF:
-	_optimized_cnf = CNF()
-
-	for _clause in cnf.clauses:
-		is_clause_satisfied = False
-
-		# check if the clause is satisfied by any literal in the knowledge base
-		for var in _clause:
-			if var in knowledge_base or -var in knowledge_base:
-				is_clause_satisfied = True
-				break
-
-		# if the clause is not satisfied, add it to the optimized CNF
-		if not is_clause_satisfied:
-			_optimized_cnf.append(_clause)
-
-	return _optimized_cnf
+# def pretty_print_cnf(cnf, cols):
+# 	for _ in cnf.clauses:
+# 		clause_str = []
+# 		for var in _:
+# 			r = (abs(var) - 1) // cols
+# 			c = (abs(var) - 1) % cols
+#
+# 			# T(i, j) for True (trap) and G(i, j) for False (gem)
+# 			if var > 0:
+# 				clause_str.append(f"T({r},{c})")  # True means the cell is a trap
+# 			else:
+# 				clause_str.append(f"G({r},{c})")  # False means the cell is not a trap (i.e., gem)
+#
+# 		print(" ∨ ".join(clause_str))
