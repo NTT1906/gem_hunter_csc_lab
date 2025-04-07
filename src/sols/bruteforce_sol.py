@@ -4,7 +4,7 @@ from .isol import *
 from itertools import combinations
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from utils import get_neighbors
+from src.utils import get_neighbors
 
 class BruteforceSolution(ISolution):
     def solve(self, grid: Grid, cnf: CNF) -> Result | None:

@@ -1,7 +1,12 @@
+import os
 from sols.backtrack_sol import BacktrackSolution
 from sols.bruteforce_sol import BruteforceSolution
 from sols.pysat_sol import *
 from utils import *
+
+run_path = os.path.dirname(os.path.abspath(__file__))
+def get_file_absolute_path(file_path):
+	return os.path.abspath(str(os.path.join(run_path, file_path)))
 
 def run(file_name):
 	grid = read_input(file_name)
@@ -23,29 +28,29 @@ def run(file_name):
 					if grid[r][c] == 0 and (r, c) not in scoped_cells:
 						scoped_cells.append((r, c))
 
-	def test(sol: ISolution, name: str):
-		print(f"Solution: {name}")
+	def test(solution: ISolution, solution_name: str):
+		print(f"Solution: {solution_name}")
 		elapsed_time = -time.time()
-		result = sol.solve(grid, cnf)
+		result = solution.solve(grid, cnf)
 		if result is None:
 			print("No solution")
 		else:
 			model = result.model
 			rows = len(grid)
 			cols = len(grid[0])
-			for row in range(rows):
-				for col in range(cols):
-					if grid[row][col] == 0:
-						if (row, col) not in scoped_cells:
+			for trow in range(rows):
+				for tcol in range(cols):
+					if grid[trow][tcol] == 0:
+						if (trow, tcol) not in scoped_cells:
 							print('_', end=' ')
 							continue
-						m = row * cols + col + 1
+						m = trow * cols + tcol + 1
 						if m in model:
 							print("T", end=' ')
 						else:
 							print("G", end=' ')
 					else:
-						print(f"{grid[row][col]}", end=' ')
+						print(f"{grid[trow][tcol]}", end=' ')
 				print('')
 		elapsed_time += time.time()
 		print(f"Real time: {elapsed_time * 1000:.3f}ms")
@@ -61,12 +66,12 @@ def run(file_name):
 
 def main():
 	input_files = [
-		# "asset/input_5.txt",
-		# "asset/input_4.txt",
-		# "asset/input_2.txt",
-		# "asset/input_3.txt",
-		# "asset/input_1.txt",
-		"asset/input_6.txt",
+		"../asset/input_5.txt",
+		"./asset/input_4.txt",
+		"../asset/input_2.txt",
+		"../asset/input_3.txt",
+		"../asset/input_1.txt",
+		"../asset/input_6.txt",
 	]
 	for file in input_files:
 		run(file)

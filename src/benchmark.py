@@ -1,12 +1,11 @@
 import asyncio
-import os
 import time
 
-from sols.backtrack_sol import BacktrackSolution
-from sols.bruteforce_sol import BruteforceSolution
-from sols.isol import ISolution, Result
-from sols.pysat_sol import PysatSolution
-from utils import read_input, generate_cnf, get_neighbors, get_output_name_from_input_file
+from src.sols.backtrack_sol import BacktrackSolution
+from src.sols.bruteforce_sol import BruteforceSolution
+from src.sols.isol import ISolution, Result
+from src.sols.pysat_sol import PysatSolution
+from src.utils import read_input, generate_cnf, get_neighbors, get_output_name_from_input_file
 
 async def process_input(input_file: str, timeout: float = 2):
 	try:
@@ -96,12 +95,12 @@ async def process_input(input_file: str, timeout: float = 2):
 
 async def benchmark():
 	input_files = [
-		"asset/input_2.txt",
-		"asset/input_5.txt",
-		"asset/input_4.txt",
-		"asset/input_3.txt",
-		"asset/input_1.txt",
-		"asset/input_6.txt"
+		"../asset/input_2.txt",
+		"../asset/input_5.txt",
+		"../asset/input_4.txt",
+		"../asset/input_3.txt",
+		"../asset/input_1.txt",
+		"../asset/input_6.txt"
 	]
 	input_timeout = [
 		2,
